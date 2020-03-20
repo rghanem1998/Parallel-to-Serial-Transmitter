@@ -1,0 +1,168 @@
+library ieee;
+ use ieee.std_logic_1164.all;
+ entity Transmitter is
+ port (pin: in std_logic_vector(7 downto 0);
+ go ,reset, clk :in std_logic;
+ sout : out std_logic );
+ end entity Transmitter;
+
+ architecture simple of transmitter is
+ TYPE state_type IS ( init, pin_0, pin_1, pin_2, pin_3,pin_4,pin_5,
+pin_6,pin_7,Parity, stop );
+ SIGNAL state: state_type:= init;
+ signal input: std_logic_vector( 7 downto 0);
+begin
+
+ process(reset, clk)
+ begin
+
+if reset = '1' then
+ sout <='1';
+ state <= init;
+elsif rising_edge(clk) then
+ case(state) is
+when init => if (go='0') then
+ sout<= '1' ;
+ else
+ input<= pin;
+sout<='0';
+ state<=pin_0;
+ end if;
+
+when pin_0 => sout<=input(0);
+ state<=pin_1;
+
+ when pin_1 => sout<=input(1);
+ state<=pin_2;
+
+ when pin_2 => sout<=input(2);
+ state<=pin_3;
+
+ when pin_3 => sout<=input(3);
+ state<=pin_4;
+
+ when pin_4 => sout<=input(4);
+ state<=pin_5;
+
+ when pin_5 => sout<=input(5);
+ state<=pin_6;
+
+ when pin_6 => sout<=input(6);
+ state<=pin_7;
+
+when pin_7 => sout<=input(7);
+ state<=parity;
+
+
+ when parity => sout<= input(0) xnor input(1) xnor input(2
+) xnor input(3) xnor input(4) xnor input(5) xnor input(6) xnor input(7);
+ state<=stop;
+
+ when stop => sout<='1';
+ state<= init;
+
+ end case;
+ end if ;
+ end process;
+ end architecture simple;
+
+
+ library ieee;
+ use ieee.std_logic_1164.all;
+
+ entity testBench is
+ end entity testBench;
+
+ architecture basic of testBench is
+ signal PIN : std_logic_vector(7 downto 0);
+ signal clk,reset,go ,sout: std_logic := '0';
+ begin
+
+ g1: entity work.transmitter(basic) port map
+ (PIN,go ,reset, clk ,sout ) ;
+
+ clk <= not clk after 10ns;
+
+ reset<='1' after 0ns ,
+ '0' after 20ns,
+ '1' after 50ns,
+ '0' after 80ns;
+
+ go<= '1' after 0ns ,
+ '0' after 50ns ,
+ '1' after 90ns;
+
+ PIN<= X"78" ,
+ X"A1" after 110ns;
+ end architecture basic;
+ library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.numeric_std.ALL;
+entity Clock_Divider is
+port ( clk: in std_logic;
+clock_out: out std_logic);
+end Clock_Divider;
+architecture bhv of Clock_Divider is
+signal count: integer:=1;
+signal tmp : std_logic := '0';
+begin
+process(clk)
+begin
+
+if(clk'event and clk='1') then
+count <=count+1;
+if (count = 25000000) then
+tmp <= NOT tmp;
+count <= 1;
+end if;
+end if;
+clock_out <= tmp;
+end process;
+end bhv;
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+ENTITY Tb_clock_divider IS
+END Tb_clock_divider;
+ARCHITECTURE behavior OF Tb_clock_divider IS
+-- Component Declaration for the Unit Under Test (UUT)
+COMPONENT Clock_Divider
+PORT(
+clk : IN std_logic;
+clock_out : OUT std_logic
+
+);
+
+END COMPONENT;
+--Inputs
+
+signal clk : std_logic := '0';
+--Outputs
+signal clock_out : std_logic;
+-- Clock period definitions
+constant clk_period : time := 20 ns;
+BEGIN
+-- Instantiate the Unit Under Test (UUT)
+
+uut: Clock_Divider PORT MAP (
+
+clk => clk,
+clock_out => clock_out
+
+);
+
+-- Clock process definitions
+clk_process :process
+begin
+clk <= '0';
+wait for clk_period/2;
+clk <= '1';
+wait for clk_period/2;
+end process;
+-- Stimulus process
+stim_proc: process
+begin
+wait for 100 ns;
+wait for 100 ns;
+wait;
+end process;
+END;
